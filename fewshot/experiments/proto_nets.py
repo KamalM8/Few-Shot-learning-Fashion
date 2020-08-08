@@ -10,7 +10,7 @@ import pdb
 import sys
 sys.path.append('./')
 
-from few_shot.datasets import OmniglotDataset, MiniImageNet
+from few_shot.datasets import OmniglotDataset, MiniImageNet, FashionDataset
 from few_shot.models import get_few_shot_encoder
 from few_shot.core import NShotTaskSampler, EvaluateFewShot, prepare_nshot_task
 from few_shot.proto import proto_net_episode
@@ -80,6 +80,11 @@ elif args.dataset == 'miniImageNet':
     dataset_class = MiniImageNet
     num_input_channels = 3
     drop_lr_every = 40
+elif args.dataset == 'fashion':
+    n_epochs = 80
+    dataset_class = FashionDataset
+    num_input_channels = 3
+    drop_lr_every = 40
 else:
     raise(ValueError, 'Unsupported dataset')
 
@@ -125,6 +130,14 @@ if args.stn:
             stnmodel = STNv0((3, 84, 84), args)
         elif args.stn == 2:
             stnmodel = STNv1((3, 84, 84), args)
+            args.stn_reg_coeff = 0
+        else:
+            raise NotImplementedError
+    elif args.dataset == 'fashion':
+        if args.stn == 1:
+            stnmodel = STNv0((3, 60, 80), args)
+        elif args.stn == 2:
+            stnmodel = STNv1((3, 60, 80), args)
             args.stn_reg_coeff = 0
         else:
             raise NotImplementedError

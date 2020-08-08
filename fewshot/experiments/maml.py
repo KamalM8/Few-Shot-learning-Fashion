@@ -2,6 +2,7 @@
 Reproduce Model-agnostic Meta-learning results (supervised only) of Finn et al
 """
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from torch import nn
 import argparse
 import sys
@@ -86,7 +87,7 @@ elif args.dataset == 'fashion':
 else:
     raise(ValueError('Unsupported dataset'))
 
-param_str = '{}_order={}_n={}_k={}_metabatch={}_train_steps={}_val_steps={}_{}'.format(args.dataset, args.order, args.n, args.k, args.meta_batch_size, args.inner_train_steps, args.inner_val_steps, args.seed)
+param_str = 'maml_{}_order={}_n={}_k={}_metabatch={}_train_steps={}_val_steps={}_{}'.format(args.dataset, args.order, args.n, args.k, args.meta_batch_size, args.inner_train_steps, args.inner_val_steps, args.seed)
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
 
@@ -160,6 +161,9 @@ meta_model = FewShotClassifier(num_input_channels, args.k, fc_layer_size).to(dev
 meta_optimiser = torch.optim.Adam(meta_model.parameters(), lr=args.meta_lr)
 loss_fn = nn.CrossEntropyLoss().to(device)
 
+# summary writers
+train_writer = SummaryWriter('tensorboard_logs/' + param_str + '/train')
+test_writer = SummaryWriter('tensorboard_logs/' + param_str + '/val')
 
 def prepare_meta_batch(n, k, q, meta_batch_size):
     def prepare_meta_batch_(batch):
@@ -185,6 +189,7 @@ callbacks = [
         k_way=args.k,
         q_queries=args.q,
         taskloader=evaluation_taskloader,
+        writer=test_writer,
         prepare_batch=prepare_meta_batch(args.n, args.k, args.q, args.meta_batch_size),
         # MAML kwargs
         inner_train_steps=args.inner_val_steps,
@@ -207,6 +212,7 @@ fit(
     loss_fn,
     epochs=args.epochs,
     dataloader=background_taskloader,
+    writer=train_writer,
     prepare_batch=prepare_meta_batch(args.n, args.k, args.q, args.meta_batch_size),
     callbacks=callbacks,
     stnmodel=stnmodel,

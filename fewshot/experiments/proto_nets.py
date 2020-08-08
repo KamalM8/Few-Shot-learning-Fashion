@@ -3,6 +3,7 @@ Reproduce Omniglot results of Snell et al Prototypical networks.
 """
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torch import nn
 import numpy as np
@@ -88,7 +89,7 @@ elif args.dataset == 'fashion':
 else:
     raise(ValueError, 'Unsupported dataset')
 
-param_str = '{}_nt={}_kt={}_qt={}_'.format(args.dataset, args.n_train, args.k_train, args.q_train) + \
+param_str = 'proto_{}_nt={}_kt={}_qt={}_'.format(args.dataset, args.n_train, args.k_train, args.q_train) + \
             'nv={}_kv={}_qv={}'.format(args.n_test, args.k_test, args.q_test) + \
             '_{}'.format(args.seed)
 if args.stn:
@@ -167,6 +168,10 @@ if args.stn:
 optimiser = Adam(model.parameters(), lr=1e-3)
 loss_fn = torch.nn.NLLLoss().cuda()
 
+# summary writers
+train_writer = SummaryWriter('tensorboard_logs/' + param_str + '/train')
+test_writer = SummaryWriter('tensorboard_logs/' + param_str + '/val')
+
 def lr_schedule(epoch, lr):
     # Drop lr every 2000 episodes
     if epoch % drop_lr_every == 0:
@@ -182,6 +187,7 @@ callbacks = [
         k_way=args.k_test,
         q_queries=args.q_test,
         taskloader=evaluation_taskloader,
+        writer=test_writer,
         prepare_batch=prepare_nshot_task(args.n_test, args.k_test, args.q_test),
         distance=args.distance
     ),
@@ -199,6 +205,7 @@ fit(
     loss_fn,
     epochs=n_epochs,
     dataloader=background_taskloader,
+    writer=train_writer,
     prepare_batch=prepare_nshot_task(args.n_train, args.k_train, args.q_train),
     callbacks=callbacks,
     metrics=['categorical_accuracy'],

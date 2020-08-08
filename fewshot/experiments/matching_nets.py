@@ -4,8 +4,10 @@ Reproduce Matching Network results of Vinyals et al
 import argparse
 from torch.utils.data import DataLoader
 from torch.optim import Adam
+import sys
+sys.path.append('./')
 
-from few_shot.datasets import OmniglotDataset, MiniImageNet
+from few_shot.datasets import OmniglotDataset, MiniImageNet, FashionDataset
 from few_shot.core import NShotTaskSampler, prepare_nshot_task, EvaluateFewShot
 from few_shot.matching import matching_net_episode
 from few_shot.train import fit
@@ -33,7 +35,7 @@ parser.add_argument('--n-train', default=1, type=int)
 parser.add_argument('--n-test', default=1, type=int)
 parser.add_argument('--k-train', default=5, type=int)
 parser.add_argument('--k-test', default=5, type=int)
-parser.add_argument('--q-train', default=15, type=int)
+parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--lstm-layers', default=1, type=int)
 parser.add_argument('--unrolling-steps', default=2, type=int)
@@ -83,6 +85,11 @@ elif args.dataset == 'miniImageNet':
     dataset_class = MiniImageNet
     num_input_channels = 3
     lstm_input_size = 1600
+elif args.dataset == 'fashion':
+    n_epochs = 200
+    dataset_class = FashionDataset
+    num_input_channels = 3
+    lstm_input_size = 960
 else:
     raise(ValueError, 'Unsupported dataset')
 
@@ -115,6 +122,14 @@ if args.stn:
             stnmodel = STNv0((3, 84, 84), args)
         elif args.stn == 2:
             stnmodel = STNv1((3, 84, 84), args)
+            args.stn_reg_coeff = 0
+        else:
+            raise NotImplementedError
+    elif args.dataset == 'fashion':
+        if args.stn == 1:
+            stnmodel = STNv0((3, 60, 80), args)
+        elif args.stn == 2:
+            stnmodel = STNv1((3, 60, 80), args)
             args.stn_reg_coeff = 0
         else:
             raise NotImplementedError

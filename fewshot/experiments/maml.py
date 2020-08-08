@@ -4,8 +4,10 @@ Reproduce Model-agnostic Meta-learning results (supervised only) of Finn et al
 from torch.utils.data import DataLoader
 from torch import nn
 import argparse
+import sys
+sys.path.append('./')
 
-from few_shot.datasets import OmniglotDataset, MiniImageNet
+from few_shot.datasets import OmniglotDataset, MiniImageNet, FashionDataset
 from few_shot.core import NShotTaskSampler, create_nshot_task_label, EvaluateFewShot
 from few_shot.maml import meta_gradient_step
 from few_shot.models import FewShotClassifier
@@ -77,6 +79,10 @@ elif args.dataset == 'miniImageNet':
     dataset_class = MiniImageNet
     fc_layer_size = 1600
     num_input_channels = 3
+elif args.dataset == 'fashion':
+    dataset_class = FashionDataset
+    fc_layer_size = 960
+    num_input_channels = 3
 else:
     raise(ValueError('Unsupported dataset'))
 
@@ -120,6 +126,14 @@ if args.stn:
             stnmodel = STNv0((3, 84, 84), args)
         elif args.stn == 2:
             stnmodel = STNv1((3, 84, 84), args)
+            args.stn_reg_coeff = 0
+        else:
+            raise NotImplementedError
+    elif args.dataset == 'fashion':
+        if args.stn == 1:
+            stnmodel = STNv0((3, 60, 80), args)
+        elif args.stn == 2:
+            stnmodel = STNv1((3, 60, 80), args)
             args.stn_reg_coeff = 0
         else:
             raise NotImplementedError

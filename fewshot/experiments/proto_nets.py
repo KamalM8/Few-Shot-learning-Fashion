@@ -136,9 +136,9 @@ if args.stn:
             raise NotImplementedError
     elif args.dataset == 'fashion':
         if args.stn == 1:
-            stnmodel = STNv0((3, 60, 80), args)
+            stnmodel = STNv0((3, 80, 80), args)
         elif args.stn == 2:
-            stnmodel = STNv1((3, 60, 80), args)
+            stnmodel = STNv1((3, 80, 80), args)
             args.stn_reg_coeff = 0
         else:
             raise NotImplementedError

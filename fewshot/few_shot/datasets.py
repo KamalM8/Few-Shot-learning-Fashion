@@ -213,7 +213,7 @@ class FashionDataset(Dataset):
         else:
             # small version is 60x80 and doesn't need cropping
             self.transform = transforms.Compose([
-                transforms.Resize((80,60)),
+                transforms.Resize((80,80)),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

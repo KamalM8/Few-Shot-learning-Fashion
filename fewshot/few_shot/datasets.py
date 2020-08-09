@@ -94,7 +94,7 @@ class OmniglotDataset(Dataset):
 
 
 class MiniImageNet(Dataset):
-    def __init__(self, subset):
+    def __init__(self, subset, augment=False):
         """Dataset class representing miniImageNet dataset
 
         # Arguments:
@@ -103,6 +103,7 @@ class MiniImageNet(Dataset):
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
         self.subset = subset
+        self.augment = augment
 
         self.df = pd.DataFrame(self.index_subset(self.subset))
 
@@ -119,13 +120,26 @@ class MiniImageNet(Dataset):
         self.datasetid_to_class_id = self.df.to_dict()['class_id']
 
         # Setup transforms
-        self.transform = transforms.Compose([
-            transforms.CenterCrop(224),
-            transforms.Resize(84),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-        ])
+        if augment:
+            self.transform = transforms.Compose([
+                transforms.CenterCrop(224),
+                transforms.Resize(84),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.RandomAffine(degrees=45, translate=(0.2, 0.2),
+                    scale=(0.8,1.2)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.CenterCrop(224),
+                transforms.Resize(84),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+
 
     def __getitem__(self, item):
         instance = Image.open(self.datasetid_to_filepath[item])
@@ -176,7 +190,7 @@ class MiniImageNet(Dataset):
         return images
 
 class FashionDataset(Dataset):
-    def __init__(self, subset, size='small'):
+    def __init__(self, subset, size='small', augment=False):
         """Dataset class representing the Fashion dataset
 
         # Arguments:
@@ -186,6 +200,10 @@ class FashionDataset(Dataset):
             raise(ValueError, 'subset must be one of (background, evaluation)')
         self.subset = subset
         self.size = size
+        if self.size == 'small':
+            c, r = 60, 80
+        else:
+            c, r = 224, 84
 
         self.df = pd.DataFrame(self.index_subset(self.subset))
 
@@ -202,18 +220,21 @@ class FashionDataset(Dataset):
         self.datasetid_to_class_id = self.df.to_dict()['class_id']
 
         # Setup transforms
-        if size == 'large':
+        if augment:
             self.transform = transforms.Compose([
-                transforms.CenterCrop(224),
-                transforms.Resize(84),
+                transforms.CenterCrop(c),
+                transforms.Resize((r,r)),
+                transforms.Grayscale(num_output_channels=3),
+                # transforms.RandomAffine(degrees=45, translate=(0.2, 0.2),
+                    # scale=(0.8,1.2)),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
             ])
         else:
-            # small version is 60x80 and doesn't need cropping
             self.transform = transforms.Compose([
-                transforms.Resize((80,80)),
+                transforms.CenterCrop(c),
+                transforms.Resize((r,r)),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

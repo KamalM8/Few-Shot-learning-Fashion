@@ -57,11 +57,12 @@ six==1.11.0
 terminado==0.8.1
 testpath==0.4.2
 toolz==0.9.0
-torch==1.0.0
-torchvision==0.2.1
+torch==1.5.0+cu101
+torchvision==0.6.0+cu101
 tornado==5.1.1
 tqdm==4.28.1
 traitlets==4.3.2
 wcwidth==0.1.7
 webencodings==0.5.1
 widgetsnbextension==3.4.2
+tensorboard==2.3.0

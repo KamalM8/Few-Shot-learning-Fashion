@@ -94,7 +94,7 @@ class OmniglotDataset(Dataset):
 
 
 class MiniImageNet(Dataset):
-    def __init__(self, subset):
+    def __init__(self, subset, augment=False):
         """Dataset class representing miniImageNet dataset
 
         # Arguments:
@@ -103,6 +103,7 @@ class MiniImageNet(Dataset):
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
         self.subset = subset
+        self.augment = augment
 
         self.df = pd.DataFrame(self.index_subset(self.subset))
 
@@ -119,13 +120,26 @@ class MiniImageNet(Dataset):
         self.datasetid_to_class_id = self.df.to_dict()['class_id']
 
         # Setup transforms
-        self.transform = transforms.Compose([
-            transforms.CenterCrop(224),
-            transforms.Resize(84),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-        ])
+        if augment:
+            self.transform = transforms.Compose([
+                transforms.CenterCrop(224),
+                transforms.Resize(84),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.RandomAffine(degrees=45, translate=(0.2, 0.2),
+                    scale=(0.8,1.2)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.CenterCrop(224),
+                transforms.Resize(84),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+
 
     def __getitem__(self, item):
         instance = Image.open(self.datasetid_to_filepath[item])
@@ -175,6 +189,106 @@ class MiniImageNet(Dataset):
         progress_bar.close()
         return images
 
+class FashionDataset(Dataset):
+    def __init__(self, subset, size='small', augment=False):
+        """Dataset class representing the Fashion dataset
+
+        # Arguments:
+            subset: Whether the dataset represents the background or evaluation set
+        """
+        if subset not in ('background', 'evaluation'):
+            raise(ValueError, 'subset must be one of (background, evaluation)')
+        self.subset = subset
+        self.size = size
+        if self.size == 'small':
+            c, r = 60, 80
+        else:
+            c, r = 224, 84
+
+        self.df = pd.DataFrame(self.index_subset(self.subset))
+
+        # Index of dataframe has direct correspondence to item in dataset
+        self.df = self.df.assign(id=self.df.index.values)
+
+        # Convert arbitrary class names of dataset to ordered 0-(num_speakers - 1) integers
+        self.unique_characters = sorted(self.df['class_name'].unique())
+        self.class_name_to_id = {self.unique_characters[i]: i for i in range(self.num_classes())}
+        self.df = self.df.assign(class_id=self.df['class_name'].apply(lambda c: self.class_name_to_id[c]))
+
+        # Create dicts
+        self.datasetid_to_filepath = self.df.to_dict()['filepath']
+        self.datasetid_to_class_id = self.df.to_dict()['class_id']
+
+        # Setup transforms
+        if augment:
+            self.transform = transforms.Compose([
+                transforms.CenterCrop(c),
+                transforms.Resize((r,r)),
+                transforms.Grayscale(num_output_channels=3),
+                # transforms.RandomAffine(degrees=45, translate=(0.2, 0.2),
+                    # scale=(0.8,1.2)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.CenterCrop(c),
+                transforms.Resize((r,r)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
+
+    def __getitem__(self, item):
+        instance = Image.open(self.datasetid_to_filepath[item])
+        if instance.mode == 'L':
+            instance = instance.convert('RGB')
+        instance = self.transform(instance)
+        label = self.datasetid_to_class_id[item]
+        return instance, label
+
+    def __len__(self):
+        return len(self.df)
+
+    def num_classes(self):
+        return len(self.df['class_name'].unique())
+
+    @staticmethod
+    def index_subset(subset):
+        """Index a subset by looping through all of its files and recording relevant information.
+
+        # Arguments
+            subset: Name of the subset
+
+        # Returns
+            A list of dicts containing information about all the image files in a particular subset of the
+            Fashion dataset
+        """
+        images = []
+        print('Indexing {}...'.format(subset))
+        # Quick first pass to find total for tqdm bar
+        subset_len = 0
+        for root, folders, files in os.walk(DATA_PATH + '/fashion-dataset/images_{}/'.format(subset)):
+            subset_len += len([f for f in files if f.endswith('.jpg')])
+
+        progress_bar = tqdm(total=subset_len)
+        for root, folders, files in os.walk(DATA_PATH + '/fashion-dataset/images_{}/'.format(subset)):
+            if len(files) == 0:
+                continue
+
+            class_name = root.split('/')[-1]
+
+            for f in files:
+                progress_bar.update(1)
+                images.append({
+                    'subset': subset,
+                    'class_name': class_name,
+                    'filepath': os.path.join(root, f)
+                })
+
+        progress_bar.close()
+        return images
 
 class DummyDataset(Dataset):
     def __init__(self, samples_per_class=10, n_classes=10, n_features=1):

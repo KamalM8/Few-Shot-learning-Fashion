@@ -3,6 +3,7 @@ The `fit` function in this file implements a slightly modified version
 of the Keras `model.fit()` API.
 """
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from torch.optim import Optimizer
 from torch.nn import Module
 from torch.utils.data import DataLoader
@@ -53,7 +54,7 @@ def batch_metrics(model: Module, y_pred: torch.Tensor, y: torch.Tensor, metrics:
     return batch_logs
 
 
-def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dataloader: DataLoader,
+def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dataloader: DataLoader, writer: SummaryWriter,
         prepare_batch: Callable, metrics: List[Union[str, Callable]] = None, callbacks: List[Callback] = None,
         verbose: bool =True, fit_function: Callable = gradient_step,
         stnmodel = None,
@@ -123,6 +124,8 @@ def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dat
 
             # Loops through all metrics
             batch_logs = batch_metrics(model, y_pred, y, metrics, batch_logs)
+            writer.add_scalar('Train_loss', batch_logs['loss'], len(dataloader)*(epoch-1) + batch_index)
+            writer.add_scalar('categorical_accuracy', batch_logs['categorical_accuracy'], len(dataloader)*(epoch-1) + batch_index)
 
             callbacks.on_batch_end(batch_index, batch_logs)
 

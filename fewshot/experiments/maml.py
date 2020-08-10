@@ -2,10 +2,13 @@
 Reproduce Model-agnostic Meta-learning results (supervised only) of Finn et al
 """
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from torch import nn
 import argparse
+import sys
+sys.path.append('./')
 
-from few_shot.datasets import OmniglotDataset, MiniImageNet
+from few_shot.datasets import OmniglotDataset, MiniImageNet, FashionDataset
 from few_shot.core import NShotTaskSampler, create_nshot_task_label, EvaluateFewShot
 from few_shot.maml import meta_gradient_step
 from few_shot.models import FewShotClassifier
@@ -77,10 +80,14 @@ elif args.dataset == 'miniImageNet':
     dataset_class = MiniImageNet
     fc_layer_size = 1600
     num_input_channels = 3
+elif args.dataset == 'fashion':
+    dataset_class = FashionDataset
+    fc_layer_size = 960
+    num_input_channels = 3
 else:
     raise(ValueError('Unsupported dataset'))
 
-param_str = '{}_order={}_n={}_k={}_metabatch={}_train_steps={}_val_steps={}_{}'.format(args.dataset, args.order, args.n, args.k, args.meta_batch_size, args.inner_train_steps, args.inner_val_steps, args.seed)
+param_str = 'maml_{}_order={}_n={}_k={}_metabatch={}_train_steps={}_val_steps={}_{}'.format(args.dataset, args.order, args.n, args.k, args.meta_batch_size, args.inner_train_steps, args.inner_val_steps, args.seed)
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
 
@@ -123,6 +130,14 @@ if args.stn:
             args.stn_reg_coeff = 0
         else:
             raise NotImplementedError
+    elif args.dataset == 'fashion':
+        if args.stn == 1:
+            stnmodel = STNv0((3, 80, 80), args)
+        elif args.stn == 2:
+            stnmodel = STNv1((3, 80, 80), args)
+            args.stn_reg_coeff = 0
+        else:
+            raise NotImplementedError
     elif args.dataset == 'omniglot':
         if args.stn == 1:
             stnmodel = STNv0((1, 28, 28), args)
@@ -146,6 +161,9 @@ meta_model = FewShotClassifier(num_input_channels, args.k, fc_layer_size).to(dev
 meta_optimiser = torch.optim.Adam(meta_model.parameters(), lr=args.meta_lr)
 loss_fn = nn.CrossEntropyLoss().to(device)
 
+# summary writers
+train_writer = SummaryWriter('tensorboard_logs/' + param_str + '/train')
+test_writer = SummaryWriter('tensorboard_logs/' + param_str + '/val')
 
 def prepare_meta_batch(n, k, q, meta_batch_size):
     def prepare_meta_batch_(batch):
@@ -171,6 +189,7 @@ callbacks = [
         k_way=args.k,
         q_queries=args.q,
         taskloader=evaluation_taskloader,
+        writer=test_writer,
         prepare_batch=prepare_meta_batch(args.n, args.k, args.q, args.meta_batch_size),
         # MAML kwargs
         inner_train_steps=args.inner_val_steps,
@@ -193,6 +212,7 @@ fit(
     loss_fn,
     epochs=args.epochs,
     dataloader=background_taskloader,
+    writer=train_writer,
     prepare_batch=prepare_meta_batch(args.n, args.k, args.q, args.meta_batch_size),
     callbacks=callbacks,
     stnmodel=stnmodel,

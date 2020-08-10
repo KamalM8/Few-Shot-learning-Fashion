@@ -1,10 +1,9 @@
 # Few-shot learning
 
-The aim for this repository is to contain clean, readable and tested
-code to reproduce few-shot learning research.
-
-This project is written in python 3.6 and Pytorch and assumes you have
-a GPU.
+This repository is built on top of [oscarknagg's code](https://github.com/oscarknagg/few-shot) and [rohitrango's code](https://github.com/rohitrango/STNAdversarial) on few shot learning. This is a pytorch implementation where we benchmark different few-shot learning methods three datasets, namely:
+- Omniglot
+- miniImageNet
+- Fashion-products-dataset
 
 See these Medium articles for some more information
 1. [Theory and concepts](https://towardsdatascience.com/advances-in-few-shot-learning-a-guided-tour-36bc10a68b77)
@@ -16,12 +15,27 @@ See these Medium articles for some more information
 Listed in `requirements.txt`. Install with `pip install -r
 requirements.txt` preferably in a virtualenv.
 
-### Data
-Edit the `DATA_PATH` variable in `config.py` to the location where
-you store the Omniglot and miniImagenet datasets.
+### Training Data
 
-After acquiring the
-data and running the setup scripts your folder structure should look
+1. Edit the `DATA_PATH` variable in `config.py` to the location where
+you store the Omniglot, miniImageNet and fashion datasets.
+2. Download the Omniglot dataset from https://github.com/brendenlake/omniglot/tree/master/python, place the extracted files into `DATA_PATH/Omniglot_Raw`
+3. Download the miniImageNet dataset from https://drive.google.com/file/d/0B3Irx3uQNoBMQ1FlNXJsZUdYWEE/view, place in `DATA_PATH/miniImageNet/images`
+4. Download the fashion dataset:\
+**Note**: training parameters are currently tailored on fashion small. Training parameters for fashion large will be updated soon.
+
+    * Download the fashion large dataset from https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset/version/1, place in `DATA_PATH/fashion-dataset` and rename `images` to `images_large`. 
+    * Download the fashion small dataset from https://www.kaggle.com/paramaggarwal/fashion-product-images-small, place in `DATA_PATH/fashion-dataset` and rename `images` to `images_small`.
+
+5. Run `scripts/prepare_omniglot.py` to prepare the Omniglot dataset.
+
+6. Run `scripts/prepare_mini_imagenet.py` to prepare the miniImageNet dataset.
+
+7. Run: 
+    * `scripts/prepare_fashion.py --size large` to prepare the fashion small dataset.
+    * `scripts/prepare_fashion.py --size small` to prepare the fashion large dataset.
+
+5. After acquiring the data and running the setup scripts your folder structure should look
 like
 ```
 DATA_PATH/
@@ -31,15 +45,14 @@ DATA_PATH/
     miniImageNet/
         images_background/
         images_evaluation/
+    fashion/
+        images_small/
+        images_large/
+        metaTest.txt/
+        metaTrain.txt/
+        styles.csv/
+        images.csv/
 ```
-
-**Omniglot** dataset. Download from https://github.com/brendenlake/omniglot/tree/master/python,
-place the extracted files into `DATA_PATH/Omniglot_Raw` and run
-`scripts/prepare_omniglot.py`
-
-**miniImageNet** dataset. Download files from
-https://drive.google.com/file/d/0B3Irx3uQNoBMQ1FlNXJsZUdYWEE/view,
-place in `data/miniImageNet/images` and run `scripts/prepare_mini_imagenet.py`
 
 ### Tests (optional)
 
@@ -48,10 +61,10 @@ all tests.
 
 # Results
 
-The file `experiments/experiments.txt` contains the hyperparameters I
-used to obtain the results given below.
-
 ### Prototypical Networks
+
+The file `proto_experiments.sh` contains the hyperparameters 
+used to obtain all the results given below.
 
 ![Prototypical Networks](https://github.com/oscarknagg/few-shot/blob/master/assets/proto_nets_diagram.png)
 
@@ -61,7 +74,7 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 (Snell et al).
 
 **Arguments**
-- dataset: {'omniglot', 'miniImageNet'}. Whether to use the Omniglot
+- dataset: {'omniglot', 'miniImageNet', 'fashion'}. Whether to use the Omniglot
     or miniImagenet dataset
 - distance: {'l2', 'cosine'}. Which distance metric to use
 - n-train: Support samples per class for training tasks
@@ -79,12 +92,26 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 | Published        | 98.8     |99.7 |96.0  |98.9  |
 | This Repo        | 98.2     |99.4 |95.8  |98.6  |
 
+--k-train 60 --n-train 1
+
 |                  | miniImageNet|     |
 |------------------|-------------|-----|
 | **k-way**        | **5**       |**5**|
 | **n-shot**       | **1**       |**5**|
 | Published        | 49.4        |68.2 |
 | This Repo        | 48.0        |66.2 |
+
+--k-train 20 --n-train 1
+
+|                  | Fashion-SMALL  |     |      |      |      |       |
+|------------------|----------------|-----|------|------|------|-------|
+| **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
+| **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
+| This Repo        | 90.5           |93.0 |70.0  |86.2  |55.2  |72.2   |
+| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
+| This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
+
+--k-train 40 --n-train 1
 
 ### Matching Networks
 
@@ -188,3 +215,41 @@ more memory.
 | This Repo (2)    | 47.5        |64.7 |
 
 Number in brackets indicates 1st or 2nd order MAML.
+
+## Citation
+
+If you find *InsightFace* useful in your research, please consider to cite the following related papers:
+
+```
+@inproceedings{snell2017prototypical,
+  title={Prototypical networks for few-shot learning},
+  author={Snell, Jake and Swersky, Kevin and Zemel, Richard},
+  booktitle={Advances in neural information processing systems},
+  pages={4077--4087},
+  year={2017}
+}
+
+@inproceedings{vinyals2016matching,
+  title={Matching networks for one shot learning},
+  author={Vinyals, Oriol and Blundell, Charles and Lillicrap, Timothy and Wierstra, Daan and others},
+  booktitle={Advances in neural information processing systems},
+  pages={3630--3638},
+  year={2016}
+}
+
+@article{finn2017model,
+  title={Model-agnostic meta-learning for fast adaptation of deep networks},
+  author={Finn, Chelsea and Abbeel, Pieter and Levine, Sergey},
+  journal={arXiv preprint arXiv:1703.03400},
+  year={2017}
+}
+
+
+@inproceedings{jena2020ma3,
+  title={MA3: Model Agnostic Adversarial Augmentation for Few Shot learning},
+  author={Jena, Rohit and Sukanta Halder, Shirsendu and Sycara, Katia},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops},
+  pages={908--909},
+  year={2020}
+}
+```

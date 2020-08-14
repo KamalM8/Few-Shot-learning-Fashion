@@ -124,7 +124,7 @@ def proto_net_episode(model: Module,
     else:
         pass
 
-    return loss, y_pred
+    return loss, y_pred, x.detach()
 
 
 def compute_prototypes(support: torch.Tensor, k: int, n: int) -> torch.Tensor:

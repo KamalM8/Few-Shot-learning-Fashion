@@ -3,6 +3,9 @@ The `fit` function in this file implements a slightly modified version
 of the Keras `model.fit()` API.
 """
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 from torch.optim import Optimizer
 from torch.nn import Module
 from torch.utils.data import DataLoader
@@ -52,8 +55,37 @@ def batch_metrics(model: Module, y_pred: torch.Tensor, y: torch.Tensor, metrics:
 
     return batch_logs
 
+def unnormalize(imgs, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    unnorm_imgs = torch.empty_like(imgs)
+    mean_tensor = torch.FloatTensor(mean).view(3,1,1)
+    std_tensor = torch.FloatTensor(std).view(3,1,1)
+    for i, img in enumerate(imgs):
+        unnorm_imgs[i] = img*std_tensor + mean_tensor
+    return unnorm_imgs
 
-def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dataloader: DataLoader,
+def matplotlib_imshow(img, one_channel=False):
+    if one_channel:
+        img = img.mean(dim=0)
+    npimg = img.numpy()
+    npimg = (npimg*255).astype(np.uint8)
+    if one_channel:
+        plt.imshow(np.img, cmap="Greys")
+    else:
+        plt.imshow(np.transpose(npimg, (1,2,0)))
+
+def plot_classes_preds(images, labels, preds, n_shot, k_way):
+    support = images[:n_shot*k_way].cpu()
+    support = unnormalize(support)
+    probs = preds
+    fig = plt.figure(figsize=(10,10))
+    for idx in np.arange(support.shape[0]):
+        ax = fig.add_subplot(k_way, n_shot, idx+1, xticks=[], yticks=[])
+        matplotlib_imshow(support[idx], one_channel=False)
+
+    return fig
+
+
+def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dataloader: DataLoader, writer: SummaryWriter,
         prepare_batch: Callable, metrics: List[Union[str, Callable]] = None, callbacks: List[Callback] = None,
         verbose: bool =True, fit_function: Callable = gradient_step,
         stnmodel = None,
@@ -118,11 +150,20 @@ def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dat
             fit_function_kwargs['stnoptim'] = stnoptim
             fit_function_kwargs['args'] = args
 
-            loss, y_pred = fit_function(model, optimiser, loss_fn, x, y, **fit_function_kwargs)
+            n_shot = fit_function_kwargs['n_shot']
+            k_way = fit_function_kwargs['k_way']
+
+            loss, y_pred, aug_imgs = fit_function(model, optimiser, loss_fn, x, y, **fit_function_kwargs)
             batch_logs['loss'] = loss.item()
+
+            if batch_index % 100 == 99:
+                writer.add_figure('episode', plot_classes_preds(aug_imgs, y, y_pred, n_shot, k_way),
+                        global_step=len(dataloader)*(epoch-1) + batch_index)
 
             # Loops through all metrics
             batch_logs = batch_metrics(model, y_pred, y, metrics, batch_logs)
+            writer.add_scalar('Train_loss', batch_logs['loss'], len(dataloader)*(epoch-1) + batch_index)
+            writer.add_scalar('categorical_accuracy', batch_logs['categorical_accuracy'], len(dataloader)*(epoch-1) + batch_index)
 
             callbacks.on_batch_end(batch_index, batch_logs)
 

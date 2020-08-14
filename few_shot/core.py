@@ -1,4 +1,5 @@
 from torch.utils.data import Sampler
+from torch.utils.tensorboard import SummaryWriter
 from typing import List, Iterable, Callable, Tuple
 import numpy as np
 import torch
@@ -106,6 +107,7 @@ class EvaluateFewShot(Callback):
                  k_way: int,
                  q_queries: int,
                  taskloader: torch.utils.data.DataLoader,
+                 writer: SummaryWriter,
                  prepare_batch: Callable,
                  prefix: str = 'val_',
                  **kwargs):
@@ -124,6 +126,7 @@ class EvaluateFewShot(Callback):
                     self.n_shot,
                     self.k_way,
                 )
+        self.writer = writer
 
     def on_train_begin(self, logs=None):
         self.loss_fn = self.params['loss_fn']
@@ -136,7 +139,7 @@ class EvaluateFewShot(Callback):
         for batch_index, batch in enumerate(self.taskloader):
             x, y = self.prepare_batch(batch)
 
-            loss, y_pred = self.eval_fn(
+            loss, y_pred, _ = self.eval_fn(
                 self.model,
                 self.optimiser,
                 self.loss_fn,
@@ -156,6 +159,8 @@ class EvaluateFewShot(Callback):
 
         logs[self.prefix + 'loss'] = totals['loss'] / seen
         logs[self.metric_name] = totals[self.metric_name] / seen
+        self.writer.add_scalar('Val_loss', totals['loss']/seen)
+        self.writer.add_scalar('Val_accuracy', totals[self.metric_name]/seen)
 
 
 def prepare_nshot_task(n: int, k: int, q: int) -> Callable:

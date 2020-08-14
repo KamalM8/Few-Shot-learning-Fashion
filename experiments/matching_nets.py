@@ -3,9 +3,12 @@ Reproduce Matching Network results of Vinyals et al
 """
 import argparse
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from torch.optim import Adam
+import sys
+sys.path.append('./')
 
-from few_shot.datasets import OmniglotDataset, MiniImageNet
+from few_shot.datasets import OmniglotDataset, MiniImageNet, FashionDataset
 from few_shot.core import NShotTaskSampler, prepare_nshot_task, EvaluateFewShot
 from few_shot.matching import matching_net_episode
 from few_shot.train import fit
@@ -33,7 +36,7 @@ parser.add_argument('--n-train', default=1, type=int)
 parser.add_argument('--n-test', default=1, type=int)
 parser.add_argument('--k-train', default=5, type=int)
 parser.add_argument('--k-test', default=5, type=int)
-parser.add_argument('--q-train', default=15, type=int)
+parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--lstm-layers', default=1, type=int)
 parser.add_argument('--unrolling-steps', default=2, type=int)
@@ -83,10 +86,15 @@ elif args.dataset == 'miniImageNet':
     dataset_class = MiniImageNet
     num_input_channels = 3
     lstm_input_size = 1600
+elif args.dataset == 'fashion':
+    n_epochs = 200
+    dataset_class = FashionDataset
+    num_input_channels = 3
+    lstm_input_size = 960
 else:
     raise(ValueError, 'Unsupported dataset')
 
-param_str = '{}_n={}_k={}_q={}_nv={}_kv={}_qv={}_dist={}_fce={}'.format(args.dataset, args.n_train, args.k_train, args.q_train, args.n_test, args.k_test, args.q_test, args.distance, args.fce) \
+param_str = 'matching_{}_n={}_k={}_q={}_nv={}_kv={}_qv={}_dist={}_fce={}'.format(args.dataset, args.n_train, args.k_train, args.q_train, args.n_test, args.k_test, args.q_test, args.distance, args.fce) \
                 + '_{}'.format(args.seed)
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
@@ -115,6 +123,14 @@ if args.stn:
             stnmodel = STNv0((3, 84, 84), args)
         elif args.stn == 2:
             stnmodel = STNv1((3, 84, 84), args)
+            args.stn_reg_coeff = 0
+        else:
+            raise NotImplementedError
+    elif args.dataset == 'fashion':
+        if args.stn == 1:
+            stnmodel = STNv0((3, 80, 80), args)
+        elif args.stn == 2:
+            stnmodel = STNv1((3, 80, 80), args)
             args.stn_reg_coeff = 0
         else:
             raise NotImplementedError
@@ -160,6 +176,9 @@ if args.stn:
 optimiser = Adam(model.parameters(), lr=1e-3)
 loss_fn = torch.nn.NLLLoss().cuda()
 
+# summary writers
+train_writer = SummaryWriter('tensorboard_logs/' + param_str + '/train')
+test_writer = SummaryWriter('tensorboard_logs/' + param_str + '/val')
 
 callbacks = [
     EvaluateFewShot(
@@ -169,6 +188,7 @@ callbacks = [
         k_way=args.k_test,
         q_queries=args.q_test,
         taskloader=evaluation_taskloader,
+        writer=test_writer,
         prepare_batch=prepare_nshot_task(args.n_test, args.k_test, args.q_test),
         fce=args.fce,
         args=args,
@@ -191,6 +211,7 @@ fit(
     loss_fn,
     epochs=n_epochs,
     dataloader=background_taskloader,
+    writer=train_writer,
     prepare_batch=prepare_nshot_task(args.n_train, args.k_train, args.q_train),
     callbacks=callbacks,
     stnmodel=stnmodel,

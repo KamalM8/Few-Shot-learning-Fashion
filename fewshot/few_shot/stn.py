@@ -80,8 +80,8 @@ class STNv0(nn.Module):
         theta[idx, :] = self.identity_transform
         # change the shape
         theta = theta.view(-1, 2, 3)
-        grid = F.affine_grid(theta, inp_flatten.size())
-        results = F.grid_sample(inp_flatten, grid)
+        grid = F.affine_grid(theta, inp_flatten.size(), align_corners=True)
+        results = F.grid_sample(inp_flatten, grid, align_corners=True)
 
         transform = theta
         return results, transform, {}
@@ -167,8 +167,8 @@ class STNv1(nn.Module):
         theta[idx, :] = self.identity_transform
         # change the shape
         theta = theta.view(-1, 2, 3)
-        grid = F.affine_grid(theta, inp_flatten.size())
-        results = F.grid_sample(inp_flatten, grid)
+        grid = F.affine_grid(theta, inp_flatten.size(), align_corners=True)
+        results = F.grid_sample(inp_flatten, grid, align_corners=True)
 
         transform = theta
         return results, transform, {}

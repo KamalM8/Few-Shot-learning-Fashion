@@ -12,7 +12,7 @@ from config import DATA_PATH
 
 
 class OmniglotDataset(Dataset):
-    def __init__(self, subset):
+    def __init__(self, subset, augment=False):
         """Dataset class representing Omniglot dataset
 
         # Arguments:

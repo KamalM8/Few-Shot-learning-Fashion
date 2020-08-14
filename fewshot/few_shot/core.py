@@ -139,7 +139,7 @@ class EvaluateFewShot(Callback):
         for batch_index, batch in enumerate(self.taskloader):
             x, y = self.prepare_batch(batch)
 
-            loss, y_pred = self.eval_fn(
+            loss, y_pred, _ = self.eval_fn(
                 self.model,
                 self.optimiser,
                 self.loss_fn,

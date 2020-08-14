@@ -203,7 +203,7 @@ class FashionDataset(Dataset):
         if self.size == 'small':
             c, r = 60, 80
         else:
-            c, r = 224, 84
+            c, r = 224, 300
 
         self.df = pd.DataFrame(self.index_subset(self.subset))
 
@@ -234,7 +234,8 @@ class FashionDataset(Dataset):
         else:
             self.transform = transforms.Compose([
                 transforms.CenterCrop(c),
-                transforms.Resize((r,r)),
+                # transforms.Resize((r,r)),
+                transforms.CenterCrop(c),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

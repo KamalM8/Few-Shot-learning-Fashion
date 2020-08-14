@@ -16,7 +16,7 @@ import os
 import sys
 import argparse
 sys.path.append('./')
-import pdb
+from PIL import Image
 
 from config import DATA_PATH
 from few_shot.utils import mkdir, rmdir
@@ -50,6 +50,11 @@ for c in background_classes:
 for c in evaluation_classes:
     mkdir(DATA_PATH + '/fashion-dataset/images_evaluation/{}/'.format(c))
 
+def resize(path):
+    img = Image.open(path)
+    img = img.resize((300,300))
+    return img
+
 # Move images to correct location
 root = DATA_PATH + 'fashion-dataset/images_{}'.format(args.size)
 for line in tqdm(meta_data):
@@ -65,8 +70,12 @@ for line in tqdm(meta_data):
         continue
 
     src = '{}/{}'.format(root, image_id + '.jpg')
+    dst = DATA_PATH + 'fashion-dataset/{}/{}/{}'.format(subset_folder, image_category, image_id + '.jpg')
     if os.path.exists(src):
-        dst = DATA_PATH + 'fashion-dataset/{}/{}/{}'.format(subset_folder, image_category, image_id + '.jpg')
-        shutil.copy(src, dst)
+        if args.size == 'small':
+            shutil.copy(src, dst)
+        else:
+            resized_img = resize(src)
+            resized_img.save(dst)
 
 print('Processing fashion_{} finished'.format(args.size))

@@ -83,7 +83,7 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
 elif args.dataset == 'fashion':
     dataset_class = FashionDataset
-    fc_layer_size = 960
+    fc_layer_size = 576
     num_input_channels = 3
 else:
     raise(ValueError('Unsupported dataset'))

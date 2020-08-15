@@ -94,7 +94,7 @@ elif args.dataset == 'fashion':
         n_epochs = 200
     dataset_class = FashionDataset
     num_input_channels = 3
-    lstm_input_size = 960
+    lstm_input_size = 576
 else:
     raise(ValueError, 'Unsupported dataset')
 

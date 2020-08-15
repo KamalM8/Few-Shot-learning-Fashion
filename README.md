@@ -118,7 +118,7 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 | **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
 | **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
 | This Repo        | 76.0           |86.0 |47.8  |61.6  |25.2  |36.1   |
-| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
+| This Repo (aug)  | 81.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
 | This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
 
 --k-train 40 --n-train 1         size=(300,300)
@@ -259,6 +259,11 @@ more memory.
 | This Repo (2)    | 47.5        |64.7 |
 
 Number in brackets indicates 1st or 2nd order MAML.
+
+### Todo
+
+- [ ] Calibrate and train with STNs.
+- [ ] Train 2nd order MAML.
 
 ## Citation
 

@@ -83,7 +83,10 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
     drop_lr_every = 40
 elif args.dataset == 'fashion':
-    n_epochs = 80
+    if args.augment:
+        n_epochs = 200 # slow convergence
+    else:
+        n_epochs = 80
     dataset_class = FashionDataset
     num_input_channels = 3
     drop_lr_every = 40

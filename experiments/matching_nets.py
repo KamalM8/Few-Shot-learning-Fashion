@@ -40,6 +40,7 @@ parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--lstm-layers', default=1, type=int)
 parser.add_argument('--unrolling-steps', default=2, type=int)
+parser.add_argument('--augment', default=False, action='store_true')
 
 
 parser.add_argument('--seed', default=42, type=int)
@@ -87,7 +88,10 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
     lstm_input_size = 1600
 elif args.dataset == 'fashion':
-    n_epochs = 200
+    if args.augment:
+        n_epochs = 300
+    else:
+        n_epochs = 200
     dataset_class = FashionDataset
     num_input_channels = 3
     lstm_input_size = 960
@@ -98,6 +102,9 @@ param_str = 'matching_{}_n={}_k={}_q={}_nv={}_kv={}_qv={}_dist={}_fce={}'.format
                 + '_{}'.format(args.seed)
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
+
+if args.augment:
+    param_str += '_aug'
 
 if args.suffix != '':
     param_str += '_{}'.format(args.suffix)

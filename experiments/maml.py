@@ -40,6 +40,7 @@ parser.add_argument('--order', default=1, type=int)
 parser.add_argument('--epochs', default=50, type=int)
 parser.add_argument('--epoch-len', default=100, type=int)
 parser.add_argument('--eval-batches', default=20, type=int)
+parser.add_argument('--augment', default=False, action='store_true')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -91,6 +92,8 @@ param_str = 'maml_{}_order={}_n={}_k={}_metabatch={}_train_steps={}_val_steps={}
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
 
+if args.augment:
+    param_str += '_aug'
 if args.suffix != '':
     param_str += '_{}'.format(args.suffix)
 print(param_str)

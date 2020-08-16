@@ -9,6 +9,24 @@ See these Medium articles for some more information
 1. [Theory and concepts](https://towardsdatascience.com/advances-in-few-shot-learning-a-guided-tour-36bc10a68b77)
 2. [Discussion of implementation details](https://towardsdatascience.com/advances-in-few-shot-learning-reproducing-results-in-pytorch-aba70dee541d)
 
+# Contents
+- [Setup](#setup)
+   * [Requirements](#requirements)
+   * [Training Data](#training-data)
+   * [Train](#train)
+   * [Results](#results)
+      + [Prototypical Networks](#prototypical-networks)
+      + [Matching Networks](#matching-networks)
+      + [Model Agnostic Meta Learning](#model-agnostic-meta-learning)
+
+- [Todo](#todo)
+
+- [Citation](#citation)
+
+- [Contact](#contact)
+
+
+
 # Setup
 ### Requirements
 
@@ -54,10 +72,14 @@ DATA_PATH/
         images.csv/
 ```
 
-### Tests (optional)
+### Train
 
-After adding the datasets run `pytest` in the root directory to run
-all tests.
+To train all the models and reproduce the following results, run the following scripts:
+```
+sh proto_experiments.sh
+sh matching_experiments.sh
+sh maml_experiments.sh
+```
 
 # Results
 
@@ -108,7 +130,7 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 | **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
 | **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
 | This Repo        | 95.0           |99.0 |78.8  |91.6  |58.6  |76.9   |
-| This Repo (aug)  | 95.0           |00.0 |79.0  |00.0  |00.0  |00.0   |
+| This Repo (aug)  | 95.0           |00.0 |79.0  |00.0  |55.6  |00.0   |
 
 --k-train 20 --n-train 1         size=(80x80) epochs=200
 
@@ -203,7 +225,7 @@ metric.
 
 --k-train 40 --n-train 1 --fce True 
 
-### Model-Agnostic Meta-Learning (MAML)
+### Model Agnostic Meta Learning (MAML)
 
 ![MAML](https://github.com/oscarknagg/few-shot/blob/master/assets/maml_diagram.png)
 
@@ -272,7 +294,7 @@ Number in brackets indicates 1st or 2nd order MAML.
 
 ## Citation
 
-If you find *InsightFace* useful in your research, please consider to cite the following related papers:
+Please consider to cite the following related papers if this repository helps you with your research:
 
 ```
 @inproceedings{snell2017prototypical,
@@ -306,4 +328,9 @@ If you find *InsightFace* useful in your research, please consider to cite the f
   pages={908--909},
   year={2020}
 }
+```
+## Contact
+
+```
+[Kamal Mustafa](kamal.mustafa.ks@gmail.com)
 ```

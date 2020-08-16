@@ -38,6 +38,7 @@ parser.add_argument('--k-test', default=5, type=int)
 parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--augment', default=False, action='store_true')
+parser.add_argument('--size', default='small', help='fashion dataset version (default: small)')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -106,14 +107,14 @@ print(param_str)
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background', augment=args.augment)
+background = dataset_class('background', args.size, augment=args.augment)
 background_taskloader = DataLoader(
     background,
     batch_sampler=NShotTaskSampler(background, episodes_per_epoch,
         args.n_train, args.k_train, args.q_train),
     num_workers=4
 )
-evaluation = dataset_class('evaluation')
+evaluation = dataset_class('evaluation', args.size)
 evaluation_taskloader = DataLoader(
     evaluation,
     batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch,

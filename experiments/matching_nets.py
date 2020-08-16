@@ -41,7 +41,7 @@ parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--lstm-layers', default=1, type=int)
 parser.add_argument('--unrolling-steps', default=2, type=int)
 parser.add_argument('--augment', default=False, action='store_true')
-
+parser.add_argument('--size', default='small', help='fashion dataset version (default: small)')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -160,14 +160,14 @@ if args.stn:
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background', args.augment)
+background = dataset_class('background', args.size, args.augment)
 background_taskloader = DataLoader(
     background,
     batch_sampler=NShotTaskSampler(background, episodes_per_epoch, args.n_train,
                                     args.k_train, args.q_train),
     num_workers=4
 )
-evaluation = dataset_class('evaluation')
+evaluation = dataset_class('evaluation', args.size)
 evaluation_taskloader = DataLoader(
     evaluation,
     batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test,

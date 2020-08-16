@@ -56,8 +56,12 @@ DATA_PATH/
 
 ### Tests (optional)
 
-After adding the datasets run `pytest` in the root directory to run
-all tests.
+To run all tests, run the following commands:
+```
+sh proto_experiments.sh
+sh matching_experiments.sh
+sh maml_experiments.sh
+```
 
 # Results
 

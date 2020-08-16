@@ -131,7 +131,7 @@ def matching_net_episode(model: Module,
         # Take gradient step
         optimiser.step()
 
-    return loss, y_pred
+    return loss, y_pred, x.detach()
 
 
 def matching_net_predictions(attention: torch.Tensor, n: int, k: int, q: int) -> torch.Tensor:

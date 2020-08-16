@@ -17,6 +17,7 @@ class OmniglotDataset(Dataset):
 
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
+            augment: Apply online augmentation
         """
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
@@ -99,6 +100,7 @@ class MiniImageNet(Dataset):
 
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
+            augment: Apply online augmentation
         """
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
@@ -124,9 +126,8 @@ class MiniImageNet(Dataset):
             self.transform = transforms.Compose([
                 transforms.CenterCrop(224),
                 transforms.Resize(84),
-                transforms.Grayscale(num_output_channels=3),
-                transforms.RandomAffine(degrees=45, translate=(0.2, 0.2),
-                    scale=(0.8,1.2)),
+                transforms.RandomAffine(degrees=25, translate=(0.2, 0.2),
+                    scale=(0.8,1.2), fillcolor=(255,255,255)),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -195,15 +196,18 @@ class FashionDataset(Dataset):
 
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
+            size: Train on small or large variation
+            augment: Apply online augmentation
         """
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
         self.subset = subset
         self.size = size
+
         if self.size == 'small':
             c, r = 60, 80
         else:
-            c, r = 224, 84
+            c, r = 224, 300
 
         self.df = pd.DataFrame(self.index_subset(self.subset))
 
@@ -224,9 +228,9 @@ class FashionDataset(Dataset):
             self.transform = transforms.Compose([
                 transforms.CenterCrop(c),
                 transforms.Resize((r,r)),
-                transforms.Grayscale(num_output_channels=3),
-                # transforms.RandomAffine(degrees=45, translate=(0.2, 0.2),
-                    # scale=(0.8,1.2)),
+                transforms.RandomAffine(degrees=15, translate=(0.1, 0.1),
+                    scale=(0.9,1.4), fillcolor=(255,255,255)),
+                transforms.ColorJitter(brightness=0.1, contrast=0.2, saturation=0.2, hue=0),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])

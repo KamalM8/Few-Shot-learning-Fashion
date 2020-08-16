@@ -153,7 +153,7 @@ def meta_gradient_step(model: Module,
             for h in hooks:
                 h.remove()
 
-        return torch.stack(task_losses).mean(), torch.cat(task_predictions)
+        return torch.stack(task_losses).mean(), torch.cat(task_predictions), x.detach()
 
     elif order == 2:
         model.train()

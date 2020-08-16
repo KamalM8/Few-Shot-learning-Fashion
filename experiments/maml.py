@@ -40,6 +40,7 @@ parser.add_argument('--order', default=1, type=int)
 parser.add_argument('--epochs', default=50, type=int)
 parser.add_argument('--epoch-len', default=100, type=int)
 parser.add_argument('--eval-batches', default=20, type=int)
+parser.add_argument('--augment', default=False, action='store_true')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -66,7 +67,7 @@ args.theta = args.theta / 180.0 * np.pi
 
 args = parser.parse_args()
 
-### Set seed
+# Set seed
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = True
@@ -82,7 +83,7 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
 elif args.dataset == 'fashion':
     dataset_class = FashionDataset
-    fc_layer_size = 960
+    fc_layer_size = 576
     num_input_channels = 3
 else:
     raise(ValueError('Unsupported dataset'))
@@ -91,6 +92,8 @@ param_str = 'maml_{}_order={}_n={}_k={}_metabatch={}_train_steps={}_val_steps={}
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
 
+if args.augment:
+    param_str += '_aug'
 if args.suffix != '':
     param_str += '_{}'.format(args.suffix)
 print(param_str)
@@ -99,18 +102,18 @@ print(param_str)
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background')
+background = dataset_class('background', args.augment)
 background_taskloader = DataLoader(
     background,
-    batch_sampler=NShotTaskSampler(background, args.epoch_len, n=args.n, k=args.k, q=args.q,
-                                   num_tasks=args.meta_batch_size),
+    batch_sampler=NShotTaskSampler(background, args.epoch_len, n=args.n,
+                                    k=args.k, q=args.q, num_tasks=args.meta_batch_size),
     num_workers=8
 )
 evaluation = dataset_class('evaluation')
 evaluation_taskloader = DataLoader(
     evaluation,
-    batch_sampler=NShotTaskSampler(evaluation, args.eval_batches, n=args.n, k=args.k, q=args.q,
-                                   num_tasks=args.meta_batch_size),
+    batch_sampler=NShotTaskSampler(evaluation, args.eval_batches, n=args.n,
+                                    k=args.k, q=args.q, num_tasks=args.meta_batch_size),
     num_workers=8
 )
 
@@ -222,6 +225,7 @@ fit(
     fit_function=meta_gradient_step,
     fit_function_kwargs={'n_shot': args.n, 'k_way': args.k, 'q_queries': args.q,
                          'train': True,
-                         'order': args.order, 'device': device, 'inner_train_steps': args.inner_train_steps,
+                         'order': args.order, 'device': device,
+                         'inner_train_steps': args.inner_train_steps,
                          'inner_lr': args.inner_lr},
 )

@@ -55,7 +55,15 @@ def batch_metrics(model: Module, y_pred: torch.Tensor, y: torch.Tensor, metrics:
 
     return batch_logs
 
+
 def unnormalize(imgs, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    """ Removes torch.transforms image normalization
+
+    # Arguments
+        imgs: torch tensor batch of normalized images
+        mean: mean used in prior normalization
+        std: std used in prior normalization
+    """
     unnorm_imgs = torch.empty_like(imgs)
     mean_tensor = torch.FloatTensor(mean).view(3,1,1)
     std_tensor = torch.FloatTensor(std).view(3,1,1)
@@ -63,7 +71,15 @@ def unnormalize(imgs, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         unnorm_imgs[i] = img*std_tensor + mean_tensor
     return unnorm_imgs
 
+
 def matplotlib_imshow(img, one_channel=False):
+    """ Plots image
+
+    # Arguments
+        img: image to be drawn
+        one_channel: Is it one channel (default: False)
+    """
+
     if one_channel:
         img = img.mean(dim=0)
     npimg = img.numpy()
@@ -73,10 +89,19 @@ def matplotlib_imshow(img, one_channel=False):
     else:
         plt.imshow(np.transpose(npimg, (1,2,0)))
 
-def plot_classes_preds(images, labels, preds, n_shot, k_way):
+
+def plot_classes_preds(images, n_shot, k_way):
+    """ Returns image grid to be embedded into tensorboard
+
+    # Arguments
+        images: torch tensor batch of images to be plotted
+        n_shot: number of shots per class
+        k_way: number of classes
+
+    """
+
     support = images[:n_shot*k_way].cpu()
     support = unnormalize(support)
-    probs = preds
     fig = plt.figure(figsize=(10,10))
     for idx in np.arange(support.shape[0]):
         ax = fig.add_subplot(k_way, n_shot, idx+1, xticks=[], yticks=[])
@@ -104,6 +129,7 @@ def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dat
         loss_fn: Loss function to calculate between predictions and outputs
         epochs: Number of epochs of fitting to be performed
         dataloader: `torch.DataLoader` instance to fit the model to
+        writer: `tensorboard.SummaryWriter` instance to write plots to tensorboard
         prepare_batch: Callable to perform any desired preprocessing
         metrics: Optional list of metrics to evaluate the model with
         callbacks: Additional functionality to incorporate into training such as logging metrics to csv, model
@@ -156,12 +182,16 @@ def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dat
             loss, y_pred, aug_imgs = fit_function(model, optimiser, loss_fn, x, y, **fit_function_kwargs)
             batch_logs['loss'] = loss.item()
 
-            if batch_index % 100 == 99:
-                writer.add_figure('episode', plot_classes_preds(aug_imgs, y, y_pred, n_shot, k_way),
-                        global_step=len(dataloader)*(epoch-1) + batch_index)
+            # Useful for viewing images for debugging (Doesn't work for maml)
+            #TODO (kamal): customize for maml
+            # if batch_index % 100 == 99:
+                # writer.add_figure('episode', plot_classes_preds(aug_imgs, y, y_pred, n_shot, k_way),
+                        # global_step=len(dataloader)*(epoch-1) + batch_index)
 
             # Loops through all metrics
             batch_logs = batch_metrics(model, y_pred, y, metrics, batch_logs)
+
+            # Log training loss and categorical accuracy
             writer.add_scalar('Train_loss', batch_logs['loss'], len(dataloader)*(epoch-1) + batch_index)
             writer.add_scalar('categorical_accuracy', batch_logs['categorical_accuracy'], len(dataloader)*(epoch-1) + batch_index)
 

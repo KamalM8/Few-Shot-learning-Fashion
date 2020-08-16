@@ -18,12 +18,12 @@ from few_shot.stn import STNv0, STNv1
 from torch import nn
 from config import PATH
 
+from few_shot.models import MatchingNetwork
 
 setup_dirs()
 assert torch.cuda.is_available()
 device = torch.device('cuda')
 torch.backends.cudnn.benchmark = True
-
 
 ##############
 # Parameters #
@@ -40,6 +40,7 @@ parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--lstm-layers', default=1, type=int)
 parser.add_argument('--unrolling-steps', default=2, type=int)
+parser.add_argument('--augment', default=False, action='store_true')
 
 
 parser.add_argument('--seed', default=42, type=int)
@@ -65,7 +66,7 @@ parser.add_argument('--targetonly', default=0, type=int)
 args = parser.parse_args()
 args.theta = args.theta / 180.0 * np.pi
 
-### Set seed
+# Set seed
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = True
@@ -87,10 +88,13 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
     lstm_input_size = 1600
 elif args.dataset == 'fashion':
-    n_epochs = 200
+    if args.augment:
+        n_epochs = 300
+    else:
+        n_epochs = 200
     dataset_class = FashionDataset
     num_input_channels = 3
-    lstm_input_size = 960
+    lstm_input_size = 576
 else:
     raise(ValueError, 'Unsupported dataset')
 
@@ -98,6 +102,9 @@ param_str = 'matching_{}_n={}_k={}_q={}_nv={}_kv={}_qv={}_dist={}_fce={}'.format
                 + '_{}'.format(args.seed)
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
+
+if args.augment:
+    param_str += '_aug'
 
 if args.suffix != '':
     param_str += '_{}'.format(args.suffix)
@@ -107,7 +114,6 @@ print(param_str)
 #########
 # Model #
 #########
-from few_shot.models import MatchingNetwork
 model = MatchingNetwork(args.n_train, args.k_train, args.q_train, args.fce, num_input_channels,
                         lstm_layers=args.lstm_layers,
                         lstm_input_size=lstm_input_size,
@@ -149,21 +155,23 @@ if args.stn:
     stnmodel = nn.DataParallel(stnmodel)
     # Get optimizer
     stnoptim = Adam(stnmodel.parameters(), lr=args.stnlr,
-            weight_decay=args.stnweightdecay)
+                    weight_decay=args.stnweightdecay)
 
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background')
+background = dataset_class('background', args.augment)
 background_taskloader = DataLoader(
     background,
-    batch_sampler=NShotTaskSampler(background, episodes_per_epoch, args.n_train, args.k_train, args.q_train),
+    batch_sampler=NShotTaskSampler(background, episodes_per_epoch, args.n_train,
+                                    args.k_train, args.q_train),
     num_workers=4
 )
 evaluation = dataset_class('evaluation')
 evaluation_taskloader = DataLoader(
     evaluation,
-    batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test, args.k_test, args.q_test),
+    batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test,
+                                    args.k_test, args.q_test),
     num_workers=4
 )
 
@@ -219,6 +227,7 @@ fit(
     args=args,
     metrics=['categorical_accuracy'],
     fit_function=matching_net_episode,
-    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train, 'q_queries': args.q_train, 'train': True,
+    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train,
+                         'q_queries': args.q_train, 'train': True,
                          'fce': args.fce, 'distance': args.distance}
 )

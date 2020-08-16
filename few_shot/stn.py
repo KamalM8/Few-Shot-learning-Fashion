@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from torch.autograd import Variable
 
+
 def conv_block(in_channels, out_channels):
     return nn.Sequential(
         nn.Conv2d(in_channels, out_channels, 3, padding=1),
@@ -11,6 +12,7 @@ def conv_block(in_channels, out_channels):
         nn.ReLU(),
         nn.MaxPool2d(2)
     )
+
 
 class Flatten(nn.Module):
     def __init__(self):
@@ -21,10 +23,11 @@ class Flatten(nn.Module):
 
 
 class STNv0(nn.Module):
-    def __init__(self, xdim, args):
+    def __init__(self, xdim, args, constrained=False):
         super(STNv0, self).__init__()
         self.xdim = xdim
         self.args = args
+        self.constrained = constrained
         hdim = self.args.stn_hid_dim
         self.fcx = int(xdim[1] / 4) if xdim[1] == 28 else int(xdim[1]/8)
         print(self.fcx)
@@ -78,6 +81,7 @@ class STNv0(nn.Module):
         U = torch.rand(B)
         idx = (U <= dropout).nonzero().squeeze()
         theta[idx, :] = self.identity_transform
+
         # change the shape
         theta = theta.view(-1, 2, 3)
         grid = F.affine_grid(theta, inp_flatten.size(), align_corners=True)
@@ -172,6 +176,7 @@ class STNv1(nn.Module):
 
         transform = theta
         return results, transform, {}
+
 
 # STN-VAE
 class STNVAE(nn.Module):

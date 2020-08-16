@@ -7,7 +7,6 @@ from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torch import nn
 import numpy as np
-import pdb
 import sys
 sys.path.append('./')
 
@@ -63,7 +62,7 @@ parser.add_argument('--targetonly', default=0, type=int)
 args = parser.parse_args()
 args.theta = args.theta / 180.0 * np.pi
 
-### Set seed
+# Set seed
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = True
@@ -83,16 +82,17 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
     drop_lr_every = 40
 elif args.dataset == 'fashion':
-    n_epochs = 80
+    n_epochs = 200  # slow convergence
     dataset_class = FashionDataset
     num_input_channels = 3
     drop_lr_every = 40
 else:
     raise(ValueError, 'Unsupported dataset')
 
-param_str = 'proto_{}_nt={}_kt={}_qt={}_'.format(args.dataset, args.n_train, args.k_train, args.q_train) + \
-            'nv={}_kv={}_qv={}'.format(args.n_test, args.k_test, args.q_test) + \
-            '_{}'.format(args.seed)
+param_str = 'proto_{}_nt={}_kt={}_qt={}_'.format(args.dataset, args.n_train,
+                args.k_train, args.q_train) + 'nv={}_kv={}_qv={}'.format(args.n_test,
+                args.k_test, args.q_test) + '_{}'.format(args.seed)
+
 if args.stn:
     param_str += '_stn_{}'.format(args.stn_reg_coeff)
 
@@ -109,13 +109,15 @@ print(param_str)
 background = dataset_class('background', augment=args.augment)
 background_taskloader = DataLoader(
     background,
-    batch_sampler=NShotTaskSampler(background, episodes_per_epoch, args.n_train, args.k_train, args.q_train),
+    batch_sampler=NShotTaskSampler(background, episodes_per_epoch,
+        args.n_train, args.k_train, args.q_train),
     num_workers=4
 )
 evaluation = dataset_class('evaluation')
 evaluation_taskloader = DataLoader(
     evaluation,
-    batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test, args.k_test, args.q_test),
+    batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch,
+        args.n_test, args.k_test, args.q_test),
     num_workers=4
 )
 
@@ -161,7 +163,7 @@ if args.stn:
     stnmodel = nn.DataParallel(stnmodel)
     # Get optimizer
     stnoptim = Adam(stnmodel.parameters(), lr=args.stnlr,
-            weight_decay=args.stnweightdecay)
+                weight_decay=args.stnweightdecay)
 
 ############
 # Training #
@@ -176,12 +178,14 @@ loss_fn = torch.nn.NLLLoss().cuda()
 train_writer = SummaryWriter('tensorboard_logs/' + param_str + '/train')
 test_writer = SummaryWriter('tensorboard_logs/' + param_str + '/val')
 
+
 def lr_schedule(epoch, lr):
     # Drop lr every 2000 episodes
     if epoch % drop_lr_every == 0:
         return lr / 2
     else:
         return lr
+
 
 callbacks = [
     EvaluateFewShot(
@@ -217,6 +221,7 @@ fit(
     stnmodel=stnmodel,
     stnoptim=stnoptim,
     args=args,
-    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train, 'q_queries': args.q_train, 'train': True,
+    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train,
+                         'q_queries': args.q_train, 'train': True,
                          'distance': args.distance},
 )

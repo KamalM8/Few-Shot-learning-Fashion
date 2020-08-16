@@ -18,12 +18,12 @@ from few_shot.stn import STNv0, STNv1
 from torch import nn
 from config import PATH
 
+from few_shot.models import MatchingNetwork
 
 setup_dirs()
 assert torch.cuda.is_available()
 device = torch.device('cuda')
 torch.backends.cudnn.benchmark = True
-
 
 ##############
 # Parameters #
@@ -66,7 +66,7 @@ parser.add_argument('--targetonly', default=0, type=int)
 args = parser.parse_args()
 args.theta = args.theta / 180.0 * np.pi
 
-### Set seed
+# Set seed
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = True
@@ -114,7 +114,6 @@ print(param_str)
 #########
 # Model #
 #########
-from few_shot.models import MatchingNetwork
 model = MatchingNetwork(args.n_train, args.k_train, args.q_train, args.fce, num_input_channels,
                         lstm_layers=args.lstm_layers,
                         lstm_input_size=lstm_input_size,
@@ -156,21 +155,23 @@ if args.stn:
     stnmodel = nn.DataParallel(stnmodel)
     # Get optimizer
     stnoptim = Adam(stnmodel.parameters(), lr=args.stnlr,
-            weight_decay=args.stnweightdecay)
+                    weight_decay=args.stnweightdecay)
 
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background')
+background = dataset_class('background', args.augment)
 background_taskloader = DataLoader(
     background,
-    batch_sampler=NShotTaskSampler(background, episodes_per_epoch, args.n_train, args.k_train, args.q_train),
+    batch_sampler=NShotTaskSampler(background, episodes_per_epoch, args.n_train,
+                                    args.k_train, args.q_train),
     num_workers=4
 )
 evaluation = dataset_class('evaluation')
 evaluation_taskloader = DataLoader(
     evaluation,
-    batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test, args.k_test, args.q_test),
+    batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test,
+                                    args.k_test, args.q_test),
     num_workers=4
 )
 
@@ -226,6 +227,7 @@ fit(
     args=args,
     metrics=['categorical_accuracy'],
     fit_function=matching_net_episode,
-    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train, 'q_queries': args.q_train, 'train': True,
+    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train,
+                         'q_queries': args.q_train, 'train': True,
                          'fce': args.fce, 'distance': args.distance}
 )

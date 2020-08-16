@@ -67,7 +67,7 @@ args.theta = args.theta / 180.0 * np.pi
 
 args = parser.parse_args()
 
-### Set seed
+# Set seed
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = True
@@ -102,18 +102,18 @@ print(param_str)
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background')
+background = dataset_class('background', args.augment)
 background_taskloader = DataLoader(
     background,
-    batch_sampler=NShotTaskSampler(background, args.epoch_len, n=args.n, k=args.k, q=args.q,
-                                   num_tasks=args.meta_batch_size),
+    batch_sampler=NShotTaskSampler(background, args.epoch_len, n=args.n,
+                                    k=args.k, q=args.q, num_tasks=args.meta_batch_size),
     num_workers=8
 )
 evaluation = dataset_class('evaluation')
 evaluation_taskloader = DataLoader(
     evaluation,
-    batch_sampler=NShotTaskSampler(evaluation, args.eval_batches, n=args.n, k=args.k, q=args.q,
-                                   num_tasks=args.meta_batch_size),
+    batch_sampler=NShotTaskSampler(evaluation, args.eval_batches, n=args.n,
+                                    k=args.k, q=args.q, num_tasks=args.meta_batch_size),
     num_workers=8
 )
 
@@ -225,6 +225,7 @@ fit(
     fit_function=meta_gradient_step,
     fit_function_kwargs={'n_shot': args.n, 'k_way': args.k, 'q_queries': args.q,
                          'train': True,
-                         'order': args.order, 'device': device, 'inner_train_steps': args.inner_train_steps,
+                         'order': args.order, 'device': device,
+                         'inner_train_steps': args.inner_train_steps,
                          'inner_lr': args.inner_lr},
 )

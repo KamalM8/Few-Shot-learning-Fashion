@@ -17,6 +17,7 @@ class OmniglotDataset(Dataset):
 
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
+            augment: Apply online augmentation
         """
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
@@ -99,6 +100,7 @@ class MiniImageNet(Dataset):
 
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
+            augment: Apply online augmentation
         """
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
@@ -194,11 +196,14 @@ class FashionDataset(Dataset):
 
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
+            size: Train on small or large variation
+            augment: Apply online augmentation
         """
         if subset not in ('background', 'evaluation'):
             raise(ValueError, 'subset must be one of (background, evaluation)')
         self.subset = subset
         self.size = size
+
         if self.size == 'small':
             c, r = 60, 80
         else:

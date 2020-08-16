@@ -1,9 +1,9 @@
 import torch
-import math
 import torch.nn as nn
 import torch.nn.functional as F
 
 from torch.autograd import Variable
+
 
 def conv_block(in_channels, out_channels):
     return nn.Sequential(
@@ -13,6 +13,7 @@ def conv_block(in_channels, out_channels):
         nn.MaxPool2d(2)
     )
 
+
 class Flatten(nn.Module):
     def __init__(self):
         super(Flatten, self).__init__()
@@ -20,47 +21,6 @@ class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
 
-class ClipAffine():
-    """Apply constraints on affine transformation parameters.
-
-    Args:
-        input_size (tuple): image input size
-        max_angle (float): maximum rotation angle
-        min_scale (float): minimum scaling factor
-        max_scale (float): maximum scaling factor
-        translation_factor (float): translation factor (function of input size)
-    """
-
-    def __init__(self, input_size, min_scale=(1.0,1.0),
-            max_scale=(1.8,1.8), translation_factor= 10):
-        assert isinstance(input_size, (tuple))
-        assert isinstance(min_scale, (tuple))
-        assert isinstance(max_scale, (tuple))
-        assert isinstance(translation_factor, (int))
-        self.input_size = input_size
-        self.min_scale= min_scale
-        self.max_scale= max_scale
-        self.translation_factor = translation_factor
-
-    def clip(self, params):
-        output = torch.empty_like(params)
-        for i, param in enumerate(params):
-            param_clamped = torch.empty_like(param)
-            param_clamped[0] = torch.clamp(param[0], min=1/self.min_scale[0], max=1/self.max_scale[0])
-            param_clamped[1] = 0
-            x_max = (self.translation_factor/100.0)*self.input_size[0]
-            y_max = (self.translation_factor/100.0)*self.input_size[1]
-            x_min, y_min = -x_max, -y_max
-            # param_clamped[2] = torch.clamp(param[2], min=x_min, max=x_max)
-            param_clamped[2] = 0
-            param_clamped[3] = 0
-            param_clamped[4] = torch.clamp(param[0], min=1/self.min_scale[1], max=1/self.max_scale[1])
-            # param_clamped[5] = torch.clamp(param[5], min=y_min, max=y_max)
-            param_clamped[5] = 0
-
-            output[i] = param_clamped
-
-        return output
 
 class STNv0(nn.Module):
     def __init__(self, xdim, args, constrained=False):
@@ -68,7 +28,6 @@ class STNv0(nn.Module):
         self.xdim = xdim
         self.args = args
         self.constrained = constrained
-        # self.clipper = ClipAffine((80,80))
         hdim = self.args.stn_hid_dim
         self.fcx = int(xdim[1] / 4) if xdim[1] == 28 else int(xdim[1]/8)
         print(self.fcx)
@@ -122,7 +81,6 @@ class STNv0(nn.Module):
         U = torch.rand(B)
         idx = (U <= dropout).nonzero().squeeze()
         theta[idx, :] = self.identity_transform
-        # theta = self.clipper.clip(theta.clone())
 
         # change the shape
         theta = theta.view(-1, 2, 3)
@@ -218,6 +176,7 @@ class STNv1(nn.Module):
 
         transform = theta
         return results, transform, {}
+
 
 # STN-VAE
 class STNVAE(nn.Module):

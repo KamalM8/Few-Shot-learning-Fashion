@@ -1,28 +1,30 @@
 """
-Run this script to prepare the miniImageNet dataset.
+Run this script to prepare the fashion dataset.
 
-This script uses the 100 classes of 600 images each used in the Matching
-Networks paper. The exact images used are given in data/mini_imagenet.txt which
-is downloaded from the link provided in the paper (https://goo.gl/e3orz6).
+This script uses the metaTrain.txt and metaTest.txt to create a custom
+training and validation class split respectively. Its large version could
+be downloaded from:
+(https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset/version/1)
+and the small version could be downloaded from:
+(https://www.kaggle.com/paramaggarwal/fashion-product-images-small)
 
-1. Download files from:
-    https://drive.google.com/file/d/0B3Irx3uQNoBMQ1FlNXJsZUdYWEE/view
-    and place in data/miniImageNet/images
-2. Run the script
+Follow steps in README.md (Training Data section) for more information
 """
+
 from tqdm import tqdm as tqdm
 import shutil
 import os
-import sys
 import argparse
-sys.path.append('./')
 from PIL import Image
 
 from config import DATA_PATH
 from few_shot.utils import mkdir, rmdir
 
+import sys
+sys.path.append('./')
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--size', default='small', help='Size of input image')
+parser.add_argument('--size', default='small', help='Dataset size: small or large (default: small)')
 args = parser.parse_args()
 
 # Clean up folders
@@ -74,7 +76,7 @@ for line in tqdm(meta_data):
     if os.path.exists(src):
         if args.size == 'small':
             shutil.copy(src, dst)
-        else:
+        elif args.size == 'large':
             resized_img = resize(src)
             resized_img.save(dst)
 

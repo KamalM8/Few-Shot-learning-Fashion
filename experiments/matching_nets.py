@@ -88,10 +88,7 @@ elif args.dataset == 'miniImageNet':
     num_input_channels = 3
     lstm_input_size = 1600
 elif args.dataset == 'fashion':
-    if args.augment:
-        n_epochs = 300
-    else:
-        n_epochs = 200
+    n_epochs = 200
     dataset_class = FashionDataset
     num_input_channels = 3
     lstm_input_size = 576

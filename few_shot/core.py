@@ -158,7 +158,7 @@ class EvaluateFewShot(Callback):
             totals['loss'] += loss.item() * y_pred.shape[0]
             totals[self.metric_name] += categorical_accuracy(y, y_pred) * y_pred.shape[0]
             self.writer.add_scalar('Val_loss', totals['loss'], len(self.taskloader)*(epoch-1) + batch_index)
-            self.writer.add_scalar('Val_accuracy', totals[self.metric_name], len(self.task_loader)*(epoch-1) + batch_index)
+            self.writer.add_scalar('Val_accuracy', totals[self.metric_name], len(self.taskloader)*(epoch-1) + batch_index)
 
         logs[self.prefix + 'loss'] = totals['loss'] / seen
         logs[self.metric_name] = totals[self.metric_name] / seen

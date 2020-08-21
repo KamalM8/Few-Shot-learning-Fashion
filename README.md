@@ -107,6 +107,7 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 - q-test: Query samples per class for validation tasks
 - augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
 - constrained: constrains STN space with parameters defined in few_shots/stn.py
+- size: specific to the fashion. Chooses dataset variation.
 
 |                  | Omniglot |     |      |      |
 |------------------|----------|-----|------|------|
@@ -171,6 +172,7 @@ Networks for One Shot Learning](https://arxiv.org/pdf/1606.04080.pdf)
     of the query sample
 - augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
 - constrained: constrains STN space with parameters defined in few_shots/stn.py
+- size: specific to the fashion. Chooses dataset variation.
 
 I had trouble reproducing the results of this paper using the cosine
 distance metric as I found the converge to be slow and final performance
@@ -239,6 +241,7 @@ Meta-Learning](https://arxiv.org/pdf/1703.03400.pdf)
     after each epoch
 - augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
 - constrained: constrains STN space with parameters defined in few_shots/stn.py
+- size: specific to the fashion. Chooses dataset variation.
 
 NB: For MAML n, k and q are fixed between train and test. You may need
 to adjust meta-batch-size to fit your GPU. 2nd order MAML uses a _lot_

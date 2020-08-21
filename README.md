@@ -109,6 +109,8 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 - constrained: constrains STN space with parameters defined in few_shots/stn.py
 - size: specific to the fashion. Chooses dataset variation.
 
+To get experiments results, launch ```read_csv.py --file logs/**experiment_name** ```.
+
 |                  | Omniglot |     |      |      |
 |------------------|----------|-----|------|------|
 | **k-way**        | **5**    |**5**|**20**|**20**|
@@ -180,6 +182,8 @@ dependent on the random initialisation. However I was able to reproduce
 (and slightly exceed) the results of this paper using the l2 distance
 metric.
 
+To get experiments results, launch ```read_csv.py --file logs/**experiment_name** ```.
+
 |                     | Omniglot|     |      |      |
 |---------------------|---------|-----|------|------|
 | **k-way**           | **5**   |**5**|**20**|**20**|
@@ -246,6 +250,8 @@ Meta-Learning](https://arxiv.org/pdf/1703.03400.pdf)
 NB: For MAML n, k and q are fixed between train and test. You may need
 to adjust meta-batch-size to fit your GPU. 2nd order MAML uses a _lot_
 more memory.
+
+To get experiments results, launch ```read_csv.py --file logs/**experiment_name** ```.
 
 |                  | Omniglot |     |      |      |
 |------------------|----------|-----|------|------|

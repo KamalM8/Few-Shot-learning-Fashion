@@ -105,7 +105,8 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 - k-test: Number of classes in validation tasks
 - q-train: Query samples per class for training tasks
 - q-test: Query samples per class for validation tasks
-
+- augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
+- constrained: constrains STN space with parameters defined in few_shots/stn.py
 
 |                  | Omniglot |     |      |      |
 |------------------|----------|-----|------|------|
@@ -138,8 +139,8 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 |------------------|----------------|-----|------|------|------|-------|
 | **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
 | **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
-| This Repo        | 93.5           |91.0 |77.8  |67.8  |29.8  |44.0   |
-| This Repo (aug)  | 00.0           |00.0 |54.6  |00.0  |31.0  |00.0   |
+| This Repo        | 93.5           |98.5 |78.8  |91.2  |58.8  |76.0   |
+| This Repo (aug)  | 92.5           |97.1 |76.2  |88.2  |53.8  |71.9   |
 
 --k-train 20 --n-train 1         size=(160,160) epochs 200
 
@@ -168,6 +169,8 @@ Networks for One Shot Learning](https://arxiv.org/pdf/1606.04080.pdf)
     FCE
 - unrolling-steps: Number of unrolling steps to use when calculating FCE
     of the query sample
+- augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
+- constrained: constrains STN space with parameters defined in few_shots/stn.py
 
 I had trouble reproducing the results of this paper using the cosine
 distance metric as I found the converge to be slow and final performance
@@ -199,31 +202,9 @@ metric.
 |------------------|----------------|-----|------|------|------|-------|
 | **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
 | **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
-| This Repo        | 93.0           |98.5 |78.8  |90.0  |58.6  |74.8   |
-| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-| This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
+| This Repo        | 95.0           |99.0 |79.0  |91.0  |59.1  |74.9   |
 
 --k-train 40 --n-train 1 --fce False
-
-|                  | Fashion-LARGE  |     |      |      |      |       |
-|------------------|----------------|-----|------|------|------|-------|
-| **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
-| **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
-| This Repo        | 77.5           |86.5 |49.8  |62.0  |25.4  |38.2   |
-| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-| This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-
---k-train 40 --n-train 1 --fce False
-
-|                  | Fashion-LARGE  |     |      |      |      |       |
-|------------------|----------------|-----|------|------|------|-------|
-| **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
-| **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
-| This Repo        | 76.5           |85.5 |49.4  |00.0  |27.0  |35.7   |
-| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-| This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-
---k-train 40 --n-train 1 --fce True 
 
 ### Model Agnostic Meta Learning (MAML)
 
@@ -256,7 +237,8 @@ Meta-Learning](https://arxiv.org/pdf/1703.03400.pdf)
 - epoch-len: Meta-batches per epoch
 - eval-batches: Number of meta-batches to use when evaluating the model
     after each epoch
-
+- augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
+- constrained: constrains STN space with parameters defined in few_shots/stn.py
 
 NB: For MAML n, k and q are fixed between train and test. You may need
 to adjust meta-batch-size to fit your GPU. 2nd order MAML uses a _lot_
@@ -283,14 +265,19 @@ more memory.
 | **k-way**        | **2**          |**5**|
 | **n-shot**       | **1**          |**1**|
 | This Repo        | 76.2           |53.0 |
-| This Repo (aug)  | 00.0           |00.0 |
 
 Number in brackets indicates 1st or 2nd order MAML.
 
 ### Todo
 
-- [ ] Calibrate and train with STNs.
-- [ ] Train 2nd order MAML.
+- [ ] Try different augmentation parameters
+- [ ] Augment support set only and evaluate prototypical networks, matching networks and maml on fashion small and large
+- [ ] Evaluate prototypical networks, matching networks and maml with well calibrated and unconstrained STNs
+- [ ] Evaluate prototypical networks, matching networks and maml with manually constrained STNs.
+- [ ] Evaluate prototypical networks, matching networks and maml with manually regularized and constrained STNs. 
+- [ ] Repeat above experiments with fully conditional embeddings enabled matching networks
+- [ ] Train second order MAML if resources are available. 
+
 
 ## Citation
 

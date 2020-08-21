@@ -238,6 +238,7 @@ class FashionDataset(Dataset):
             ])
         else:
             self.transform = transforms.Compose([
+                transforms.Resize((r,r)),
                 transforms.CenterCrop(c),
                 transforms.Resize((r,r)),
                 transforms.ToTensor(),

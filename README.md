@@ -9,6 +9,24 @@ See these Medium articles for some more information
 1. [Theory and concepts](https://towardsdatascience.com/advances-in-few-shot-learning-a-guided-tour-36bc10a68b77)
 2. [Discussion of implementation details](https://towardsdatascience.com/advances-in-few-shot-learning-reproducing-results-in-pytorch-aba70dee541d)
 
+# Contents
+- [Setup](#setup)
+   * [Requirements](#requirements)
+   * [Training Data](#training-data)
+   * [Train](#train)
+   * [Results](#results)
+      + [Prototypical Networks](#prototypical-networks)
+      + [Matching Networks](#matching-networks)
+      + [Model Agnostic Meta Learning](#model-agnostic-meta-learning)
+
+- [Todo](#todo)
+
+- [Citation](#citation)
+
+- [Contact](#contact)
+
+
+
 # Setup
 ### Requirements
 
@@ -54,9 +72,9 @@ DATA_PATH/
         images.csv/
 ```
 
-### Tests (optional)
+### Train
 
-To run all tests, run the following commands:
+To train all the models and reproduce the following results, run the following scripts:
 ```
 sh proto_experiments.sh
 sh matching_experiments.sh
@@ -87,7 +105,11 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 - k-test: Number of classes in validation tasks
 - q-train: Query samples per class for training tasks
 - q-test: Query samples per class for validation tasks
+- augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
+- constrained: constrains STN space with parameters defined in few_shots/stn.py
+- size: specific to the fashion. Chooses dataset variation.
 
+To get experiments results, launch ```read_csv.py --file logs/**experiment_name** ```.
 
 |                  | Omniglot |     |      |      |
 |------------------|----------|-----|------|------|
@@ -111,11 +133,19 @@ Networks for Few-shot Learning](https://arxiv.org/pdf/1703.05175.pdf)
 |------------------|----------------|-----|------|------|------|-------|
 | **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
 | **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
-| This Repo        | 92.5           |99.5 |77.6  |90.8  |58.4  |75.0   |
-| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-| This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
+| This Repo        | 95.0           |99.0 |78.8  |91.6  |58.6  |76.9   |
+| This Repo (aug)  | 95.0           |98.0 |79.0  |91.8  |55.6  |77.6   |
 
---k-train 40 --n-train 1
+--k-train 20 --n-train 1         size=(80x80) epochs=200
+
+|                  | Fashion-LARGE  |     |      |      |      |       |
+|------------------|----------------|-----|------|------|------|-------|
+| **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
+| **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
+| This Repo        | 93.5           |98.5 |78.8  |91.2  |58.8  |76.0   |
+| This Repo (aug)  | 92.5           |97.1 |76.2  |88.2  |53.8  |71.9   |
+
+--k-train 20 --n-train 1         size=(160,160) epochs 200
 
 ### Matching Networks
 
@@ -142,6 +172,9 @@ Networks for One Shot Learning](https://arxiv.org/pdf/1606.04080.pdf)
     FCE
 - unrolling-steps: Number of unrolling steps to use when calculating FCE
     of the query sample
+- augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
+- constrained: constrains STN space with parameters defined in few_shots/stn.py
+- size: specific to the fashion. Chooses dataset variation.
 
 I had trouble reproducing the results of this paper using the cosine
 distance metric as I found the converge to be slow and final performance
@@ -149,13 +182,15 @@ dependent on the random initialisation. However I was able to reproduce
 (and slightly exceed) the results of this paper using the l2 distance
 metric.
 
+To get experiments results, launch ```read_csv.py --file logs/**experiment_name** ```.
+
 |                     | Omniglot|     |      |      |
 |---------------------|---------|-----|------|------|
 | **k-way**           | **5**   |**5**|**20**|**20**|
 | **n-shot**          | **1**   |**5**|**1** |**5** |
 | Published (cosine)  | 98.1    |98.9 |93.8  |98.5  |
 | This Repo (cosine)  | 92.0    |93.2 |75.6  |77.8  |
-| This Repo (l2)      | 98.3    |99.8 |92.8  |97.8   |
+| This Repo (l2)      | 98.3    |99.8 |92.8  |97.8  |
 
 --k-train 5 --n-train 1
 
@@ -173,13 +208,11 @@ metric.
 |------------------|----------------|-----|------|------|------|-------|
 | **k-way**        | **2**          |**2**|**5** |**5** |**15**|**15** |
 | **n-shot**       | **1**          |**5**|**1** |**5** |**1** |**5**  |
-| This Repo        | 93.0           |98.5 |78.8  |90.0  |58.6  |74.8   |
-| This Repo (aug)  | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
-| This Repo (STN   | 00.0           |00.0 |00.0  |00.0  |00.0  |00.0   |
+| This Repo        | 95.0           |99.0 |79.0  |91.0  |59.1  |74.9   |
 
 --k-train 40 --n-train 1 --fce False
 
-### Model-Agnostic Meta-Learning (MAML)
+### Model Agnostic Meta Learning (MAML)
 
 ![MAML](https://github.com/oscarknagg/few-shot/blob/master/assets/maml_diagram.png)
 
@@ -210,11 +243,15 @@ Meta-Learning](https://arxiv.org/pdf/1703.03400.pdf)
 - epoch-len: Meta-batches per epoch
 - eval-batches: Number of meta-batches to use when evaluating the model
     after each epoch
-
+- augment: enables normal augmentation with configurable parameters in few_shots/dataset.py
+- constrained: constrains STN space with parameters defined in few_shots/stn.py
+- size: specific to the fashion. Chooses dataset variation.
 
 NB: For MAML n, k and q are fixed between train and test. You may need
 to adjust meta-batch-size to fit your GPU. 2nd order MAML uses a _lot_
 more memory.
+
+To get experiments results, launch ```read_csv.py --file logs/**experiment_name** ```.
 
 |                  | Omniglot |     |      |      |
 |------------------|----------|-----|------|------|
@@ -232,11 +269,28 @@ more memory.
 | This Repo (1)    | 46.4        |63.3 |
 | This Repo (2)    | 47.5        |64.7 |
 
+|                  | Fashion-LARGE  |     |
+|------------------|----------------|-----|
+| **k-way**        | **2**          |**5**|
+| **n-shot**       | **1**          |**1**|
+| This Repo        | 76.2           |53.0 |
+
 Number in brackets indicates 1st or 2nd order MAML.
+
+### Todo
+
+- [ ] Try different augmentation parameters
+- [ ] Augment support set only and evaluate prototypical networks, matching networks and maml on fashion small and large
+- [ ] Evaluate prototypical networks, matching networks and maml with well calibrated and unconstrained STNs
+- [ ] Evaluate prototypical networks, matching networks and maml with manually constrained STNs.
+- [ ] Evaluate prototypical networks, matching networks and maml with manually regularized and constrained STNs. 
+- [ ] Repeat above experiments with fully conditional embeddings enabled matching networks
+- [ ] Train second order MAML if resources are available. 
+
 
 ## Citation
 
-If you find *InsightFace* useful in your research, please consider to cite the following related papers:
+Please consider to cite the following related papers if this repository helps you with your research:
 
 ```
 @inproceedings{snell2017prototypical,
@@ -270,4 +324,9 @@ If you find *InsightFace* useful in your research, please consider to cite the f
   pages={908--909},
   year={2020}
 }
+```
+## Contact
+
+```
+[Kamal Mustafa](kamal.mustafa.ks@gmail.com)
 ```

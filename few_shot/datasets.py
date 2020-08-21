@@ -207,7 +207,7 @@ class FashionDataset(Dataset):
         if self.size == 'small':
             c, r = 60, 80
         else:
-            c, r = 224, 300
+            c, r = 140, 160
 
         self.df = pd.DataFrame(self.index_subset(self.subset))
 
@@ -226,6 +226,7 @@ class FashionDataset(Dataset):
         # Setup transforms
         if augment:
             self.transform = transforms.Compose([
+                transforms.Resize((r,r)),
                 transforms.CenterCrop(c),
                 transforms.Resize((r,r)),
                 transforms.RandomAffine(degrees=15, translate=(0.1, 0.1),
@@ -237,6 +238,7 @@ class FashionDataset(Dataset):
             ])
         else:
             self.transform = transforms.Compose([
+                transforms.Resize((r,r)),
                 transforms.CenterCrop(c),
                 transforms.Resize((r,r)),
                 transforms.ToTensor(),

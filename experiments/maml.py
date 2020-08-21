@@ -41,6 +41,8 @@ parser.add_argument('--epochs', default=50, type=int)
 parser.add_argument('--epoch-len', default=100, type=int)
 parser.add_argument('--eval-batches', default=20, type=int)
 parser.add_argument('--augment', default=False, action='store_true')
+parser.add_argument('--size', default='small', help='fashion dataset version (default: small)')
+parser.add_argument('--constrained', default=False, action='store_true')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -102,14 +104,14 @@ print(param_str)
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background', args.augment)
+background = dataset_class('background', args.size, args.augment)
 background_taskloader = DataLoader(
     background,
     batch_sampler=NShotTaskSampler(background, args.epoch_len, n=args.n,
                                     k=args.k, q=args.q, num_tasks=args.meta_batch_size),
     num_workers=8
 )
-evaluation = dataset_class('evaluation')
+evaluation = dataset_class('evaluation', args.size)
 evaluation_taskloader = DataLoader(
     evaluation,
     batch_sampler=NShotTaskSampler(evaluation, args.eval_batches, n=args.n,
@@ -135,7 +137,10 @@ if args.stn:
             raise NotImplementedError
     elif args.dataset == 'fashion':
         if args.stn == 1:
-            stnmodel = STNv0((3, 80, 80), args)
+            if args.size=='small':
+                stnmodel = STNv0((3, 80, 80), args, constrained=args.constrained)
+            elif args.size=='large':
+                stnmodel = STNv0((3, 160, 160), args, constrained=args.constrained)
         elif args.stn == 2:
             stnmodel = STNv1((3, 80, 80), args)
             args.stn_reg_coeff = 0

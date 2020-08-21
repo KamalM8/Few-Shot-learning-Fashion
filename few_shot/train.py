@@ -185,7 +185,7 @@ def fit(model: Module, optimiser: Optimizer, loss_fn: Callable, epochs: int, dat
             # Useful for viewing images for debugging (Doesn't work for maml)
             #TODO (kamal): customize for maml
             # if batch_index % 100 == 99:
-                # writer.add_figure('episode', plot_classes_preds(aug_imgs, y, y_pred, n_shot, k_way),
+                # writer.add_figure('episode', plot_classes_preds(aug_imgs, n_shot, k_way),
                         # global_step=len(dataloader)*(epoch-1) + batch_index)
 
             # Loops through all metrics

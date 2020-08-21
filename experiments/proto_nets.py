@@ -38,6 +38,7 @@ parser.add_argument('--k-test', default=5, type=int)
 parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
 parser.add_argument('--augment', default=False, action='store_true')
+parser.add_argument('--size', default='small', help='fashion dataset version (default: small)')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -46,9 +47,10 @@ parser.add_argument('--suffix', default='', type=str)
 parser.add_argument('--stn', default=0, type=int)
 parser.add_argument('--dropout', default=0.5, type=float)
 parser.add_argument('--stn_reg_coeff', default=10, type=float)
-parser.add_argument('--stn_hid_dim', default=32, type=int)
+parser.add_argument('--stn_hid_dim', default=128, type=int)
 parser.add_argument('--stnlr', default=3e-4, type=float)
 parser.add_argument('--stnweightdecay', default=1e-5, type=float)
+parser.add_argument('--constrained', default=False, action='store_true')
 
 # STNv1 params
 parser.add_argument('--scalediff', default=0.1, type=float)
@@ -99,6 +101,9 @@ if args.stn:
 if args.augment:
     param_str += '_aug'
 
+if args.constrained:
+    param_str += '_constrained'
+
 if args.suffix != '':
     param_str += '_{}'.format(args.suffix)
 print(param_str)
@@ -106,14 +111,14 @@ print(param_str)
 ###################
 # Create datasets #
 ###################
-background = dataset_class('background', augment=args.augment)
+background = dataset_class('background', args.size, augment=args.augment)
 background_taskloader = DataLoader(
     background,
     batch_sampler=NShotTaskSampler(background, episodes_per_epoch,
         args.n_train, args.k_train, args.q_train),
     num_workers=4
 )
-evaluation = dataset_class('evaluation')
+evaluation = dataset_class('evaluation', args.size)
 evaluation_taskloader = DataLoader(
     evaluation,
     batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch,
@@ -142,7 +147,10 @@ if args.stn:
             raise NotImplementedError
     elif args.dataset == 'fashion':
         if args.stn == 1:
-            stnmodel = STNv0((3, 80, 80), args)
+            if args.size=='small':
+                stnmodel = STNv0((3, 80, 80), args, constrained=args.constrained)
+            elif args.size == 'large':
+                stnmodel = STNv0((3, 160, 160), args, constrained=args.constrained)
         elif args.stn == 2:
             stnmodel = STNv1((3, 80, 80), args)
             args.stn_reg_coeff = 0
@@ -206,6 +214,7 @@ callbacks = [
     LearningRateScheduler(schedule=lr_schedule),
     CSVLogger(PATH + '/logs/proto_nets/{}.csv'.format(param_str)),
 ]
+
 
 fit(
     model,

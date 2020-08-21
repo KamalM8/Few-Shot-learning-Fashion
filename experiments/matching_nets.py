@@ -42,6 +42,7 @@ parser.add_argument('--lstm-layers', default=1, type=int)
 parser.add_argument('--unrolling-steps', default=2, type=int)
 parser.add_argument('--augment', default=False, action='store_true')
 parser.add_argument('--size', default='small', help='fashion dataset version (default: small)')
+parser.add_argument('--constrained', default=False, action='store_true')
 
 parser.add_argument('--seed', default=42, type=int)
 parser.add_argument('--suffix', default='', type=str)
@@ -103,6 +104,9 @@ if args.stn:
 if args.augment:
     param_str += '_aug'
 
+if args.constrained:
+    param_str += '_constrained'
+
 if args.suffix != '':
     param_str += '_{}'.format(args.suffix)
 print(param_str)
@@ -131,7 +135,10 @@ if args.stn:
             raise NotImplementedError
     elif args.dataset == 'fashion':
         if args.stn == 1:
-            stnmodel = STNv0((3, 80, 80), args)
+            if args.size == 'small':
+                stnmodel = STNv0((3, 84, 84), args, constrained=args.constrained)
+            elif args.size == 'large':
+                stnmodel = STNv0((3, 160, 160), args, constrained=args.constrained)
         elif args.stn == 2:
             stnmodel = STNv1((3, 80, 80), args)
             args.stn_reg_coeff = 0

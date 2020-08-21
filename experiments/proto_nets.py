@@ -149,7 +149,7 @@ if args.stn:
         if args.stn == 1:
             if args.size=='small':
                 stnmodel = STNv0((3, 80, 80), args, constrained=args.constrained)
-            else:
+            elif args.size == 'large':
                 stnmodel = STNv0((3, 160, 160), args, constrained=args.constrained)
         elif args.stn == 2:
             stnmodel = STNv1((3, 80, 80), args)
